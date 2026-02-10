@@ -1,6 +1,6 @@
 # 🛒 Ecommerce Issue Tracker System
 
-A specialized full-stack web application for tracking and managing ecommerce-related customer issues, built with HTML, CSS, JavaScript, Node.js, and Express.js without a database.
+A specialized full-stack web application for tracking and managing ecommerce-related customer issues, built with HTML, CSS, JavaScript, Node.js, Express.js, and MongoDB.
 
 ![Node](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen)
 ![Express](https://img.shields.io/badge/express-4.18.2-lightgrey)
@@ -72,7 +72,7 @@ A modern, responsive ecommerce issue tracking system designed specifically for o
 **Backend:**
 - Node.js
 - Express.js
-- In-memory data storage
+- MongoDB (with Mongoose ODM)
 
 ## 📁 Project Structure
 
@@ -94,27 +94,35 @@ Ecommerce-compalint/
 
 - Node.js (v14 or higher)
 - npm (Node Package Manager)
+- MongoDB (local or Atlas)
 
 ### Installation
 
 1. **Navigate to the project directory**
-   ```bash
-   cd Ecommerce-compalint
-   ```
+  ```bash
+  cd Ecommerce-compalint
+  ```
 
 2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+  ```bash
+  npm install
+  ```
 
-3. **Start the server**
-   ```bash
-   node server.js
-   ```
+3. **Start MongoDB**
+  - If using local MongoDB, ensure the MongoDB server is running:
+    ```bash
+    mongod
+    ```
+  - By default, the app connects to `mongodb://localhost:27017/ecommerce_issues`. You can change this in `server.js`.
 
-4. **Access the application**
-   - Customer Portal: http://localhost:3001/index.html
-   - Admin Panel: http://localhost:3001/admin.html
+4. **Start the server**
+  ```bash
+  node server.js
+  ```
+
+5. **Access the application**
+  - Customer Portal: http://localhost:3001/index.html
+  - Admin Panel: http://localhost:3001/admin.html
 
 ## 📡 API Endpoints
 
@@ -201,13 +209,13 @@ Ecommerce-compalint/
 
 ## 🔒 Data & Constraints
 
-✅ No database - uses in-memory storage  
+✅ Data is stored in MongoDB and persists across server restarts  
 ✅ No frontend frameworks  
 ✅ Vanilla JavaScript only  
 ✅ RESTful API design  
 ✅ CORS enabled for development  
 
-⚠️ **Note:** Data is lost when server restarts (in-memory storage)
+⚠️ **Note:** Data is now persistent with MongoDB. If MongoDB is not running, the app will not function.
 
 ## 🆚 Differences from General Complaint Tracker
 
@@ -221,6 +229,7 @@ Ecommerce-compalint/
 | Theme Color | Blue | Red |
 | Port | 3000 | 3001 |
 | Additional Info | Basic | Order date, amount |
+| Data Storage | In-memory | MongoDB |
 
 ## 🤝 Contributing
 

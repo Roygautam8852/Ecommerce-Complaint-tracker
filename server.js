@@ -1,6 +1,33 @@
+// Use controller for issue logic
+const complaintController = require('./controllers/complaint.controller');
+
 const express = require('express');
+const mongoose = require('mongoose');
 const app = express();
 const PORT = 3001;
+
+// MongoDB connection
+const MONGODB_URI = 'mongodb://localhost:27017/worksetu';
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('Connected to MongoDB'))
+    .catch((err) => console.error('MongoDB connection error:', err));
+
+// Issue Schema
+const issueSchema = new mongoose.Schema({
+    customerName: { type: String, required: true },
+    email: { type: String, required: true },
+    orderId: { type: String, required: true },
+    productName: { type: String, required: true },
+    category: { type: String, required: true },
+    issueDescription: { type: String, required: true },
+    orderDate: { type: String },
+    purchaseAmount: { type: Number, default: 0 },
+    status: { type: String, default: 'pending' },
+    priority: { type: String, default: 'medium' },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date }
+});
+const Issue = mongoose.model('Issue', issueSchema);
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -17,8 +44,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-let issues = [];
-let issueIdCounter = 1;
+
 
 const ISSUE_CATEGORIES = [
     'Delivery Issue',
@@ -31,88 +57,21 @@ const ISSUE_CATEGORIES = [
     'Other'
 ];
 
-app.get('/issues', (req, res) => {
-    res.json(issues);
-});
 
-app.get('/issues/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const issue = issues.find(i => i.id === id);
-    
-    if (!issue) {
-        return res.status(404).json({ message: 'Issue not found' });
-    }
-    
-    res.json(issue);
-});
-
-app.post('/issues', (req, res) => {
-    const { customerName, email, orderId, productName, category, issueDescription, orderDate, purchaseAmount } = req.body;
-    
-    if (!customerName || !email || !orderId || !productName || !category || !issueDescription) {
-        return res.status(400).json({ message: 'All required fields must be filled' });
-    }
-    
-    const newIssue = {
-        id: issueIdCounter++,
-        customerName,
-        email,
-        orderId,
-        productName,
-        category,
-        issueDescription,
-        orderDate: orderDate || new Date().toISOString(),
-        purchaseAmount: purchaseAmount || 0,
-        status: 'pending',
-        priority: 'medium',
-        createdAt: new Date().toISOString()
-    };
-    
-    issues.push(newIssue);
-    res.status(201).json(newIssue);
-});
+app.get('/issues', complaintController.getAllIssues);
 
 
-app.put('/issues/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const { status, priority } = req.body;
-    
-    const issue = issues.find(i => i.id === id);
-    
-    if (!issue) {
-        return res.status(404).json({ message: 'Issue not found' });
-    }
-    
-    if (status) {
-        if (!['pending', 'in-progress', 'resolved', 'rejected'].includes(status)) {
-            return res.status(400).json({ message: 'Invalid status' });
-        }
-        issue.status = status;
-    }
-    
-    if (priority) {
-        if (!['low', 'medium', 'high', 'urgent'].includes(priority)) {
-            return res.status(400).json({ message: 'Invalid priority' });
-        }
-        issue.priority = priority;
-    }
-    
-    issue.updatedAt = new Date().toISOString();
-    
-    res.json(issue);
-});
+app.get('/issues/:id', complaintController.getIssueById);
 
-app.delete('/issues/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = issues.findIndex(i => i.id === id);
-    
-    if (index === -1) {
-        return res.status(404).json({ message: 'Issue not found' });
-    }
-    
-    const deletedIssue = issues.splice(index, 1)[0];
-    res.json({ message: 'Issue deleted successfully', issue: deletedIssue });
-});
+
+app.post('/issues', complaintController.createIssue);
+
+
+
+app.put('/issues/:id', complaintController.updateIssue);
+
+
+app.delete('/issues/:id', complaintController.deleteIssue);
 
 app.get('/categories', (req, res) => {
     res.json(ISSUE_CATEGORIES);
