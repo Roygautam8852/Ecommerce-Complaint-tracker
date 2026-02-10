@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Issue - Ecommerce Support</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="40" height="40" rx="8" fill="#e74c3c"/>
+                        <path d="M12 16L20 12L28 16V24L20 28L12 24V16Z" stroke="white" stroke-width="2" fill="none"/>
+                        <path d="M16 20H24M20 16V24" stroke="white" stroke-width="2"/>
+                    </svg>
+                </div>
+                <div class="header-text">
+                    <h1 class="header-title">Ecommerce Support</h1>
+                    <p class="header-subtitle">Issue Tracking System</p>
+                </div>
+            </div>
+            <nav class="nav-buttons">
+                <button class="nav-btn active" onclick="window.location.href='index.html'">
+                    <span class="nav-icon">📦</span>
+                    <span>Report Issue</span>
+                </button>
+                <button class="nav-btn" onclick="window.location.href='admin.html'">
+                    <span class="nav-icon">👨‍💼</span>
+                    <span>Admin Panel</span>
+                </button>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <div class="form-card">
+                <h2 class="form-title">Report an Issue</h2>
+                <p class="form-subtitle">Having problems with your order? Let us know and we'll help you resolve it.</p>
+                
+                <form id="issueForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customerName">Customer Name *</label>
+                            <input type="text" id="customerName" name="customerName" placeholder="Enter your full name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email Address *</label>
+                            <input type="email" id="email" name="email" placeholder="your.email@example.com" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="orderId">Order ID *</label>
+                            <input type="text" id="orderId" name="orderId" placeholder="e.g., ORD-12345" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="orderDate">Order Date</label>
+                            <input type="date" id="orderDate" name="orderDate">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productName">Product Name *</label>
+                            <input type="text" id="productName" name="productName" placeholder="Enter product name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="purchaseAmount">Purchase Amount (₹)</label>
+                            <input type="number" id="purchaseAmount" name="purchaseAmount" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">Issue Category *</label>
+                        <select id="category" name="category" required>
+                            <option value="">-- Select Category --</option>
+                            <option value="Delivery Issue">🚚 Delivery Issue</option>
+                            <option value="Product Quality">⭐ Product Quality</option>
+                            <option value="Wrong Item Received">❌ Wrong Item Received</option>
+                            <option value="Payment Problem">💳 Payment Problem</option>
+                            <option value="Return/Refund">🔄 Return/Refund</option>
+                            <option value="Damaged Product">📦 Damaged Product</option>
+                            <option value="Missing Items">🔍 Missing Items</option>
+                            <option value="Other">💬 Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="issueDescription">Issue Description *</label>
+                        <textarea id="issueDescription" name="issueDescription" rows="5" placeholder="Please describe your issue in detail..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Submit Issue</button>
+                </form>
+
+                <div id="message" class="message"></div>
+            </div>
+
+            <div class="info-box ecommerce-info">
+                <h3>📋 What happens next?</h3>
+                <ul>
+                    <li>You will receive an auto-generated issue tracking ID</li>
+                    <li>Our support team will review your issue within 24 hours</li>
+                    <li>You'll be notified via email about the status updates</li>
+                    <li>Most issues are resolved within 3-5 business days</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const form = document.getElementById('issueForm');
+        const messageDiv = document.getElementById('message');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = {
+                customerName: document.getElementById('customerName').value,
+                email: document.getElementById('email').value,
+                orderId: document.getElementById('orderId').value,
+                orderDate: document.getElementById('orderDate').value,
+                productName: document.getElementById('productName').value,
+                purchaseAmount: parseFloat(document.getElementById('purchaseAmount').value) || 0,
+                category: document.getElementById('category').value,
+                issueDescription: document.getElementById('issueDescription').value
+            };
+
+            try {
+                const response = await fetch('http://localhost:3001/issues', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    messageDiv.className = 'message success';
+                    messageDiv.textContent = `✓ Issue submitted successfully! Your tracking ID is: ISU${String(data.id).padStart(3, '0')}`;
+                    form.reset();
+                    
+                    setTimeout(() => {
+                        messageDiv.textContent = '';
+                        messageDiv.className = 'message';
+                    }, 5000);
+                } else {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = '✗ ' + (data.message || 'Error submitting issue');
+                }
+            } catch (error) {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = '✗ Error connecting to server';
+            }
+        });
+    </script>
+</body>
+</html>

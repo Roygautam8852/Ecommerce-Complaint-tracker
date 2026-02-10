@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Ecommerce Support</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="40" height="40" rx="8" fill="#e74c3c"/>
+                        <path d="M12 16L20 12L28 16V24L20 28L12 24V16Z" stroke="white" stroke-width="2" fill="none"/>
+                        <path d="M16 20H24M20 16V24" stroke="white" stroke-width="2"/>
+                    </svg>
+                </div>
+                <div class="header-text">
+                    <h1 class="header-title">Ecommerce Support</h1>
+                    <p class="header-subtitle">Issue Tracking System</p>
+                </div>
+            </div>
+            <nav class="nav-buttons">
+                <button class="nav-btn" onclick="window.location.href='index.html'">
+                    <span class="nav-icon">📦</span>
+                    <span>Report Issue</span>
+                </button>
+                <button class="nav-btn active" onclick="window.location.href='admin.html'">
+                    <span class="nav-icon">👨‍💼</span>
+                    <span>Admin Panel</span>
+                </button>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <h2 class="dashboard-title">Admin Dashboard</h2>
+            
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card blue-border">
+                    <div class="stat-label">Total Issues</div>
+                    <div class="stat-value" id="totalCount">0</div>
+                </div>
+                <div class="stat-card yellow-border">
+                    <div class="stat-label">Pending</div>
+                    <div class="stat-value" id="pendingCount">0</div>
+                </div>
+                <div class="stat-card orange-border">
+                    <div class="stat-label">In Progress</div>
+                    <div class="stat-value" id="inProgressCount">0</div>
+                </div>
+                <div class="stat-card green-border">
+                    <div class="stat-label">Resolved</div>
+                    <div class="stat-value" id="resolvedCount">0</div>
+                </div>
+                <div class="stat-card red-border">
+                    <div class="stat-label">Rejected</div>
+                    <div class="stat-value" id="rejectedCount">0</div>
+                </div>
+                <div class="stat-card purple-border">
+                    <div class="stat-label">Urgent</div>
+                    <div class="stat-value" id="urgentCount">0</div>
+                </div>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="search-section">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search by ID, order ID, customer name, or product...">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="pending">Pending</button>
+                    <button class="filter-btn" data-filter="in-progress">In Progress</button>
+                    <button class="filter-btn" data-filter="resolved">Resolved</button>
+                    <button class="filter-btn" data-filter="rejected">Rejected</button>
+                </div>
+            </div>
+
+            <!-- Issues List -->
+            <div id="issuesContainer">
+                <p class="loading">Loading issues...</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
