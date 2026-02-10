@@ -28,9 +28,10 @@ const form = document.getElementById('issueForm');
 
                 if (response.ok) {
                     messageDiv.className = 'message success';
-                    messageDiv.textContent = `Issue submitted successfully! Your tracking ID is: ISU${String(data.id).padStart(3, '0')}`;
+                    // Use user-friendly issueId if present, else fallback to _id
+                    const trackingId = data.issueId || data._id;
+                    messageDiv.textContent = `Issue submitted successfully! Your tracking ID is: ${trackingId}`;
                     form.reset();
-                    
                     setTimeout(() => {
                         messageDiv.textContent = '';
                         messageDiv.className = 'message';

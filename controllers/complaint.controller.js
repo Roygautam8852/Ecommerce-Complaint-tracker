@@ -4,6 +4,7 @@
 const mongoose = require('mongoose');
 
 const issueSchema = new mongoose.Schema({
+    issueId: { type: String, unique: true }, // User-friendly ID like ISU001
     customerName: { type: String, required: true },
     email: { type: String, required: true },
     orderId: { type: String, required: true },
@@ -44,7 +45,18 @@ module.exports = {
             return res.status(400).json({ message: 'All required fields must be filled' });
         }
         try {
+            // Find the latest issueId and increment
+            const lastIssue = await Issue.findOne({}).sort({ createdAt: -1 });
+            let nextId = 1;
+            if (lastIssue && lastIssue.issueId) {
+                const match = lastIssue.issueId.match(/ISU(\d+)/);
+                if (match) {
+                    nextId = parseInt(match[1], 10) + 1;
+                }
+            }
+            const issueId = `ISU${String(nextId).padStart(3, '0')}`;
             const newIssue = new Issue({
+                issueId,
                 customerName,
                 email,
                 orderId,

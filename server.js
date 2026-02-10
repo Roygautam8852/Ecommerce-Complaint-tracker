@@ -7,10 +7,13 @@ const app = express();
 const PORT = 3001;
 
 // MongoDB connection
-const MONGODB_URI = 'mongodb://localhost:27017/Ecommerce-issue-tracker';
+const MONGODB_URI = 'mongodb://localhost:27017/ecommerce-issue-tracker';
 mongoose.connect(MONGODB_URI)
     .then(() => console.log('Connected to MongoDB'))
     .catch((err) => console.error('MongoDB connection error:', err));
+
+
+
 
 
 

@@ -56,16 +56,83 @@ function updateStats(issues) {
     document.getElementById('urgentCount').textContent = urgent;
 }
 
-// Function to display issues
+// Function to display issues in cards view
 function displayIssues(issues) {
     const container = document.getElementById('issuesContainer');
     
     if (issues.length === 0) {
         container.innerHTML = '<p class="no-issues">No issues found</p>';
+        displayIssuesTable([]);
         return;
     }
     
     container.innerHTML = issues.map(issue => createIssueHTML(issue)).join('');
+    displayIssuesTable(issues);
+}
+
+// Function to display issues in table view
+function displayIssuesTable(issues) {
+    const tbody = document.getElementById('tableBody');
+    
+    if (issues.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="no-issues">No issues found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = issues.map(issue => {
+        const date = new Date(issue.createdAt).toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        const issueIdDisplay = issue.issueId || issue._id.slice(0, 8);
+        
+        return `
+            <tr>
+                <td class="tracking-id">${issueIdDisplay}</td>
+                <td>${issue.category}</td>
+                <td>${issue.customerName}</td>
+                <td>${issue.orderId}</td>
+                <td>${issue.productName}</td>
+                <td><span class="status-badge status-${issue.status}">${issue.status.replace('-', ' ')}</span></td>
+                <td><span class="priority-badge priority-${issue.priority}">${issue.priority}</span></td>
+                <td>${date}</td>
+                <td class="table-actions">
+                    <select class="table-select" onchange="updateStatus('${issue._id}', this.value);">
+                        <option value="">Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <button class="table-btn-delete" onclick="deleteIssue('${issue._id}')">Delete</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Function to switch between cards and table view
+function switchView(view) {
+    const cardViewBtn = document.getElementById('cardViewBtn');
+    const tableViewBtn = document.getElementById('tableViewBtn');
+    const issuesContainer = document.getElementById('issuesContainer');
+    const tableContainer = document.getElementById('tableContainer');
+    
+    if (view === 'cards') {
+        issuesContainer.style.display = 'block';
+        tableContainer.style.display = 'none';
+        cardViewBtn.classList.add('active');
+        tableViewBtn.classList.remove('active');
+    } else if (view === 'table') {
+        issuesContainer.style.display = 'none';
+        tableContainer.style.display = 'block';
+        tableViewBtn.classList.add('active');
+        cardViewBtn.classList.remove('active');
+    }
 }
 
 // Function to create HTML for an issue card
@@ -77,20 +144,18 @@ function createIssueHTML(issue) {
         hour: '2-digit',
         minute: '2-digit'
     });
-    
     const orderDate = issue.orderDate ? new Date(issue.orderDate).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric'
     }) : 'N/A';
-    
-    const issueId = `ISU${String(issue.id).padStart(3, '0')}`;
-    
+    // Show the user-friendly issueId if present, else fallback to _id
+    const issueIdDisplay = issue.issueId || issue._id;
     return `
-        <div class="issue-card" data-id="${issue.id}">
-            <div class="issue-header" onclick="toggleDetails(${issue.id})">
+        <div class="issue-card" data-id="${issue._id}">
+            <div class="issue-header" onclick="toggleDetails('${issue._id}')">
                 <div>
-                    <div class="issue-id">${issueId}</div>
+                    <div class="issue-id">${issueIdDisplay}</div>
                     <h3 class="issue-title">${issue.category}</h3>
                     <div class="issue-meta">
                         <div class="meta-item">
@@ -116,51 +181,46 @@ function createIssueHTML(issue) {
                     <span class="priority-badge priority-${issue.priority}">${issue.priority}</span>
                 </div>
             </div>
-            
-            <div class="issue-details" id="details-${issue.id}">
+            <div class="issue-details" id="details-${issue._id}">
                 <div class="detail-section">
                     <div class="detail-label">Email:</div>
                     <div class="detail-value">${issue.email}</div>
                 </div>
-                
                 <div class="detail-section">
                     <div class="detail-label">Order Date:</div>
                     <div class="detail-value">${orderDate}</div>
                 </div>
-                
                 <div class="detail-section">
                     <div class="detail-label">Purchase Amount:</div>
                     <div class="detail-value">₹${issue.purchaseAmount.toFixed(2)}</div>
                 </div>
-                
                 <div class="detail-section">
                     <div class="detail-label">Issue Description:</div>
                     <div class="issue-description">
                         ${issue.issueDescription}
                     </div>
                 </div>
-                
                 <div class="issue-actions">
-                    <button class="action-btn btn-in-progress" onclick="updateStatus(${issue.id}, 'in-progress')">
+                    <button class="action-btn btn-in-progress" onclick="updateStatus('${issue._id}', 'in-progress')">
                         In Progress
                     </button>
-                    <button class="action-btn btn-resolved" onclick="updateStatus(${issue.id}, 'resolved')">
+                    <button class="action-btn btn-resolved" onclick="updateStatus('${issue._id}', 'resolved')">
                         Resolved
                     </button>
-                    <button class="action-btn btn-pending" onclick="updateStatus(${issue.id}, 'pending')">
+                    <button class="action-btn btn-pending" onclick="updateStatus('${issue._id}', 'pending')">
                         Pending
                     </button>
-                    <button class="action-btn btn-rejected" onclick="updateStatus(${issue.id}, 'rejected')">
+                    <button class="action-btn btn-rejected" onclick="updateStatus('${issue._id}', 'rejected')">
                         Reject
                     </button>
-                    <select class="action-btn btn-priority" onchange="updatePriority(${issue.id}, this.value)">
+                    <select class="action-btn btn-priority" onchange="updatePriority('${issue._id}', this.value)">
                         <option value="">Set Priority</option>
                         <option value="low" ${issue.priority === 'low' ? 'selected' : ''}>Low</option>
                         <option value="medium" ${issue.priority === 'medium' ? 'selected' : ''}>Medium</option>
                         <option value="high" ${issue.priority === 'high' ? 'selected' : ''}>High</option>
                         <option value="urgent" ${issue.priority === 'urgent' ? 'selected' : ''}>Urgent</option>
                     </select>
-                    <button class="action-btn btn-delete" onclick="deleteIssue(${issue.id})">
+                    <button class="action-btn btn-delete" onclick="deleteIssue('${issue._id}')">
                         Delete
                     </button>
                 </div>
