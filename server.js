@@ -7,27 +7,12 @@ const app = express();
 const PORT = 3001;
 
 // MongoDB connection
-const MONGODB_URI = 'mongodb://localhost:27017/worksetu';
-mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+const MONGODB_URI = 'mongodb://localhost:27017/Ecommerce-issue-tracker';
+mongoose.connect(MONGODB_URI)
     .then(() => console.log('Connected to MongoDB'))
     .catch((err) => console.error('MongoDB connection error:', err));
 
-// Issue Schema
-const issueSchema = new mongoose.Schema({
-    customerName: { type: String, required: true },
-    email: { type: String, required: true },
-    orderId: { type: String, required: true },
-    productName: { type: String, required: true },
-    category: { type: String, required: true },
-    issueDescription: { type: String, required: true },
-    orderDate: { type: String },
-    purchaseAmount: { type: Number, default: 0 },
-    status: { type: String, default: 'pending' },
-    priority: { type: String, default: 'medium' },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date }
-});
-const Issue = mongoose.model('Issue', issueSchema);
+
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
