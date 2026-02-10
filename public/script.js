@@ -94,20 +94,20 @@ function createIssueHTML(issue) {
                     <h3 class="issue-title">${issue.category}</h3>
                     <div class="issue-meta">
                         <div class="meta-item">
-                            <span class="meta-icon">👤</span>
+                            <span class="meta-icon">Customer Name:</span>
                             <span>${issue.customerName}</span>
                         </div>
                         <div class="meta-item">
-                            <span class="meta-icon">📦</span>
-                            <span>Order: ${issue.orderId}</span>
+                            <span class="meta-icon">Order ID:</span>
+                            <span>${issue.orderId}</span>
                         </div>
                         <div class="meta-item">
-                            <span class="meta-icon">🛍️</span>
+                            <span class="meta-icon">Product:</span>
                             <span>${issue.productName}</span>
                         </div>
                         <div class="meta-item">
-                            <span class="meta-icon">📅</span>
-                            <span>Reported: ${date}</span>
+                            <span class="meta-icon">Reported:</span>
+                            <span>${date}</span>
                         </div>
                     </div>
                 </div>
@@ -142,16 +142,16 @@ function createIssueHTML(issue) {
                 
                 <div class="issue-actions">
                     <button class="action-btn btn-in-progress" onclick="updateStatus(${issue.id}, 'in-progress')">
-                        ⏳ In Progress
+                        In Progress
                     </button>
                     <button class="action-btn btn-resolved" onclick="updateStatus(${issue.id}, 'resolved')">
-                        ✓ Resolved
+                        Resolved
                     </button>
                     <button class="action-btn btn-pending" onclick="updateStatus(${issue.id}, 'pending')">
-                        ⏸️ Pending
+                        Pending
                     </button>
                     <button class="action-btn btn-rejected" onclick="updateStatus(${issue.id}, 'rejected')">
-                        ✗ Reject
+                        Reject
                     </button>
                     <select class="action-btn btn-priority" onchange="updatePriority(${issue.id}, this.value)">
                         <option value="">Set Priority</option>
@@ -161,7 +161,7 @@ function createIssueHTML(issue) {
                         <option value="urgent" ${issue.priority === 'urgent' ? 'selected' : ''}>Urgent</option>
                     </select>
                     <button class="action-btn btn-delete" onclick="deleteIssue(${issue.id})">
-                        🗑️ Delete
+                        Delete
                     </button>
                 </div>
             </div>
