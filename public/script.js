@@ -27,7 +27,7 @@ async function loadIssues() {
     try {
         container.innerHTML = '<p class="loading">Loading issues...</p>';
 
-        const response = await fetch('http://localhost:3001/issues');
+        const response = await fetch('https://ecommerce-issue-tracker.onrender.com/issues');
         allIssues = await response.json();
 
         updateStats(allIssues);
@@ -299,7 +299,7 @@ async function updateStatus(id, status) {
     }
 
     try {
-        const response = await fetch(`http://localhost:3001/issues/${id}`, {
+        const response = await fetch(`https://ecommerce-issue-tracker.onrender.com/issues/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -341,7 +341,7 @@ async function updatePriority(id, priority) {
     }
 
     try {
-        const response = await fetch(`http://localhost:3001/issues/${id}`, {
+        const response = await fetch(`https://ecommerce-issue-tracker.onrender.com/issues/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -389,7 +389,7 @@ async function deleteIssue(id) {
     }
 
     try {
-        const response = await fetch(`http://localhost:3001/issues/${id}`, {
+        const response = await fetch(`https://ecommerce-issue-tracker.onrender.com/issues/${id}`, {
             method: 'DELETE'
         });
 
