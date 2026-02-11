@@ -6,13 +6,13 @@ let currentFilter = 'all';
 // Load all issues when page loads
 document.addEventListener('DOMContentLoaded', () => {
     loadIssues();
-    
+
     // Add filter button event listeners
     const filterButtons = document.querySelectorAll('.filter-btn');
     filterButtons.forEach(btn => {
         btn.addEventListener('click', handleFilter);
     });
-    
+
     // Add search input event listener
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
@@ -23,16 +23,16 @@ document.addEventListener('DOMContentLoaded', () => {
 // Function to load and display all issues
 async function loadIssues() {
     const container = document.getElementById('issuesContainer');
-    
+
     try {
         container.innerHTML = '<p class="loading">Loading issues...</p>';
-        
+
         const response = await fetch('http://localhost:3001/issues');
         allIssues = await response.json();
-        
+
         updateStats(allIssues);
         displayIssues(allIssues);
-        
+
     } catch (error) {
         container.innerHTML = '<p class="message error">Error loading issues</p>';
         console.error('Error:', error);
@@ -47,7 +47,7 @@ function updateStats(issues) {
     const resolved = issues.filter(i => i.status === 'resolved').length;
     const rejected = issues.filter(i => i.status === 'rejected').length;
     const urgent = issues.filter(i => i.priority === 'urgent').length;
-    
+
     document.getElementById('totalCount').textContent = total;
     document.getElementById('pendingCount').textContent = pending;
     document.getElementById('inProgressCount').textContent = inProgress;
@@ -59,13 +59,13 @@ function updateStats(issues) {
 // Function to display issues in cards view
 function displayIssues(issues) {
     const container = document.getElementById('issuesContainer');
-    
+
     if (issues.length === 0) {
         container.innerHTML = '<p class="no-issues">No issues found</p>';
         displayIssuesTable([]);
         return;
     }
-    
+
     container.innerHTML = issues.map(issue => createIssueHTML(issue)).join('');
     displayIssuesTable(issues);
 }
@@ -73,12 +73,12 @@ function displayIssues(issues) {
 // Function to display issues in table view
 function displayIssuesTable(issues) {
     const tbody = document.getElementById('tableBody');
-    
+
     if (issues.length === 0) {
         tbody.innerHTML = '<tr><td colspan="9" class="no-issues">No issues found</td></tr>';
         return;
     }
-    
+
     tbody.innerHTML = issues.map(issue => {
         const date = new Date(issue.createdAt).toLocaleString('en-US', {
             month: 'short',
@@ -87,9 +87,9 @@ function displayIssuesTable(issues) {
             hour: '2-digit',
             minute: '2-digit'
         });
-        
+
         const issueIdDisplay = issue.issueId || issue._id.slice(0, 8);
-        
+
         return `
             <tr>
                 <td class="tracking-id">${issueIdDisplay}</td>
@@ -108,6 +108,13 @@ function displayIssuesTable(issues) {
                         <option value="resolved">Resolved</option>
                         <option value="rejected">Rejected</option>
                     </select>
+                    <select class="table-select" onchange="updatePriority('${issue._id}', this.value);">
+                        <option value="">Priority</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
                     <button class="table-btn-delete" onclick="deleteIssue('${issue._id}')">Delete</button>
                 </td>
             </tr>
@@ -121,7 +128,7 @@ function switchView(view) {
     const tableViewBtn = document.getElementById('tableViewBtn');
     const issuesContainer = document.getElementById('issuesContainer');
     const tableContainer = document.getElementById('tableContainer');
-    
+
     if (view === 'cards') {
         issuesContainer.style.display = 'block';
         tableContainer.style.display = 'none';
@@ -240,7 +247,7 @@ function handleFilter(e) {
     const filterButtons = document.querySelectorAll('.filter-btn');
     filterButtons.forEach(btn => btn.classList.remove('active'));
     e.target.classList.add('active');
-    
+
     currentFilter = e.target.dataset.filter;
     applyFilters();
 }
@@ -253,36 +260,44 @@ function handleSearch(e) {
 // Function to apply filters and search
 function applyFilters() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    
+
     let filtered = allIssues;
-    
+
     // Apply status filter
     if (currentFilter !== 'all') {
         filtered = filtered.filter(i => i.status === currentFilter);
     }
-    
+
     // Apply search filter
     if (searchTerm) {
         filtered = filtered.filter(i => {
-            const issueId = `ISU${String(i.id).padStart(3, '0')}`.toLowerCase();
+            // Fixed: Use issueId or _id from the issue object
+            const issueId = (i.issueId || i._id).toLowerCase();
             const customerName = i.customerName.toLowerCase();
             const orderId = i.orderId.toLowerCase();
             const productName = i.productName.toLowerCase();
             const category = i.category.toLowerCase();
-            
+
             return issueId.includes(searchTerm) ||
-                   customerName.includes(searchTerm) ||
-                   orderId.includes(searchTerm) ||
-                   productName.includes(searchTerm) ||
-                   category.includes(searchTerm);
+                customerName.includes(searchTerm) ||
+                orderId.includes(searchTerm) ||
+                productName.includes(searchTerm) ||
+                category.includes(searchTerm);
         });
     }
-    
+
     displayIssues(filtered);
 }
 
 // Function to handle status update
 async function updateStatus(id, status) {
+    // Show loading state
+    const issueCard = document.querySelector(`[data-id="${id}"]`);
+    if (issueCard) {
+        issueCard.style.opacity = '0.5';
+        issueCard.style.pointerEvents = 'none';
+    }
+
     try {
         const response = await fetch(`http://localhost:3001/issues/${id}`, {
             method: 'PUT',
@@ -291,23 +306,40 @@ async function updateStatus(id, status) {
             },
             body: JSON.stringify({ status })
         });
-        
+
         if (response.ok) {
             await loadIssues();
         } else {
             const data = await response.json();
             alert(data.message || 'Error updating issue');
+            // Restore card state on error
+            if (issueCard) {
+                issueCard.style.opacity = '1';
+                issueCard.style.pointerEvents = 'auto';
+            }
         }
     } catch (error) {
         alert('Error connecting to server');
         console.error('Error:', error);
+        // Restore card state on error
+        if (issueCard) {
+            issueCard.style.opacity = '1';
+            issueCard.style.pointerEvents = 'auto';
+        }
     }
 }
 
 // Function to handle priority update
 async function updatePriority(id, priority) {
     if (!priority) return;
-    
+
+    // Show loading state
+    const issueCard = document.querySelector(`[data-id="${id}"]`);
+    if (issueCard) {
+        issueCard.style.opacity = '0.5';
+        issueCard.style.pointerEvents = 'none';
+    }
+
     try {
         const response = await fetch(`http://localhost:3001/issues/${id}`, {
             method: 'PUT',
@@ -316,40 +348,69 @@ async function updatePriority(id, priority) {
             },
             body: JSON.stringify({ priority })
         });
-        
+
         if (response.ok) {
             await loadIssues();
         } else {
             const data = await response.json();
             alert(data.message || 'Error updating priority');
+            // Restore card state on error
+            if (issueCard) {
+                issueCard.style.opacity = '1';
+                issueCard.style.pointerEvents = 'auto';
+            }
         }
     } catch (error) {
         alert('Error connecting to server');
         console.error('Error:', error);
+        // Restore card state on error
+        if (issueCard) {
+            issueCard.style.opacity = '1';
+            issueCard.style.pointerEvents = 'auto';
+        }
     }
 }
 
 // Function to handle delete
 async function deleteIssue(id) {
-    const issueId = `ISU${String(id).padStart(3, '0')}`;
-    
+    // Fixed: Find the issue to get the correct issueId
+    const issue = allIssues.find(i => i._id === id);
+    const issueId = issue?.issueId || id;
+
     if (!confirm(`Are you sure you want to delete issue ${issueId}?`)) {
         return;
     }
-    
+
+    // Show loading state
+    const issueCard = document.querySelector(`[data-id="${id}"]`);
+    if (issueCard) {
+        issueCard.style.opacity = '0.5';
+        issueCard.style.pointerEvents = 'none';
+    }
+
     try {
         const response = await fetch(`http://localhost:3001/issues/${id}`, {
             method: 'DELETE'
         });
-        
+
         if (response.ok) {
             await loadIssues();
         } else {
             const data = await response.json();
             alert(data.message || 'Error deleting issue');
+            // Restore card state on error
+            if (issueCard) {
+                issueCard.style.opacity = '1';
+                issueCard.style.pointerEvents = 'auto';
+            }
         }
     } catch (error) {
         alert('Error connecting to server');
         console.error('Error:', error);
+        // Restore card state on error
+        if (issueCard) {
+            issueCard.style.opacity = '1';
+            issueCard.style.pointerEvents = 'auto';
+        }
     }
 }

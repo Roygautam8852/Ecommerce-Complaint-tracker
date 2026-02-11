@@ -5,16 +5,69 @@ const mongoose = require('mongoose');
 
 const issueSchema = new mongoose.Schema({
     issueId: { type: String, unique: true }, // User-friendly ID like ISU001
-    customerName: { type: String, required: true },
-    email: { type: String, required: true },
-    orderId: { type: String, required: true },
-    productName: { type: String, required: true },
-    category: { type: String, required: true },
-    issueDescription: { type: String, required: true },
-    orderDate: { type: String },
-    purchaseAmount: { type: Number, default: 0 },
-    status: { type: String, default: 'pending' },
-    priority: { type: String, default: 'medium' },
+    customerName: {
+        type: String,
+        required: true,
+        minlength: 2,
+        maxlength: 100,
+        trim: true
+    },
+    email: {
+        type: String,
+        required: true,
+        trim: true,
+        lowercase: true,
+        match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email address']
+    },
+    orderId: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    productName: {
+        type: String,
+        required: true,
+        minlength: 2,
+        maxlength: 200,
+        trim: true
+    },
+    category: {
+        type: String,
+        required: true,
+        enum: [
+            'Delivery Issue',
+            'Product Quality',
+            'Wrong Item Received',
+            'Payment Problem',
+            'Return/Refund',
+            'Damaged Product',
+            'Missing Items',
+            'Other'
+        ]
+    },
+    issueDescription: {
+        type: String,
+        required: true,
+        minlength: 10,
+        maxlength: 2000,
+        trim: true
+    },
+    orderDate: { type: Date },
+    purchaseAmount: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    status: {
+        type: String,
+        default: 'pending',
+        enum: ['pending', 'in-progress', 'resolved', 'rejected']
+    },
+    priority: {
+        type: String,
+        default: 'medium',
+        enum: ['low', 'medium', 'high', 'urgent']
+    },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date }
 });
@@ -24,12 +77,13 @@ const Issue = mongoose.models.Issue || mongoose.model('Issue', issueSchema);
 module.exports = {
     getAllIssues: async (req, res) => {
         try {
-            const issues = await Issue.find();
+            const issues = await Issue.find().sort({ createdAt: -1 });
             res.json(issues);
         } catch (err) {
             res.status(500).json({ message: 'Error fetching issues', error: err.message });
         }
     },
+
     getIssueById: async (req, res) => {
         try {
             const issue = await Issue.findById(req.params.id);
@@ -39,11 +93,26 @@ module.exports = {
             res.status(500).json({ message: 'Error fetching issue', error: err.message });
         }
     },
+
     createIssue: async (req, res) => {
         const { customerName, email, orderId, productName, category, issueDescription, orderDate, purchaseAmount } = req.body;
+
+        // Validation
         if (!customerName || !email || !orderId || !productName || !category || !issueDescription) {
             return res.status(400).json({ message: 'All required fields must be filled' });
         }
+
+        // Email validation
+        const emailRegex = /^\S+@\S+\.\S+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: 'Please enter a valid email address' });
+        }
+
+        // Purchase amount validation
+        if (purchaseAmount && purchaseAmount < 0) {
+            return res.status(400).json({ message: 'Purchase amount cannot be negative' });
+        }
+
         try {
             // Find the latest issueId and increment
             const lastIssue = await Issue.findOne({}).sort({ createdAt: -1 });
@@ -55,39 +124,49 @@ module.exports = {
                 }
             }
             const issueId = `ISU${String(nextId).padStart(3, '0')}`;
+
             const newIssue = new Issue({
                 issueId,
-                customerName,
-                email,
-                orderId,
-                productName,
+                customerName: customerName.trim(),
+                email: email.trim().toLowerCase(),
+                orderId: orderId.trim(),
+                productName: productName.trim(),
                 category,
-                issueDescription,
-                orderDate: orderDate || new Date().toISOString(),
+                issueDescription: issueDescription.trim(),
+                orderDate: orderDate ? new Date(orderDate) : null,
                 purchaseAmount: purchaseAmount || 0
             });
+
             await newIssue.save();
             res.status(201).json(newIssue);
         } catch (err) {
+            if (err.name === 'ValidationError') {
+                return res.status(400).json({ message: 'Validation error', error: err.message });
+            }
             res.status(500).json({ message: 'Error creating issue', error: err.message });
         }
     },
+
     updateIssue: async (req, res) => {
         const { status, priority } = req.body;
+
         try {
             const update = { updatedAt: new Date() };
+
             if (status) {
                 if (!['pending', 'in-progress', 'resolved', 'rejected'].includes(status)) {
                     return res.status(400).json({ message: 'Invalid status' });
                 }
                 update.status = status;
             }
+
             if (priority) {
                 if (!['low', 'medium', 'high', 'urgent'].includes(priority)) {
                     return res.status(400).json({ message: 'Invalid priority' });
                 }
                 update.priority = priority;
             }
+
             const issue = await Issue.findByIdAndUpdate(req.params.id, update, { new: true });
             if (!issue) return res.status(404).json({ message: 'Issue not found' });
             res.json(issue);
@@ -95,6 +174,7 @@ module.exports = {
             res.status(500).json({ message: 'Error updating issue', error: err.message });
         }
     },
+
     deleteIssue: async (req, res) => {
         try {
             const deletedIssue = await Issue.findByIdAndDelete(req.params.id);
